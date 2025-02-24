@@ -1,14 +1,15 @@
-# Utiliser une image de base avec JDK 17 (ou ta version Java)
-FROM eclipse-temurin:17-jdk
+FROM ubuntu:latest AS build
 
-# Définir le répertoire de travail dans le conteneur
-WORKDIR /app
+RUN apt-get update
+RUN apt-get install openjdk-17-jdk -y
+COPY . .
 
-# Copier le fichier JAR généré dans le conteneur
-COPY target/*.jar app.jar
+RUN ./gradlew bootJar --no-daemon
 
-# Exposer le port utilisé par ton application (ex : 8080)
+FROM openjdk:17-jdk-slim
+
 EXPOSE 8080
 
-# Lancer l'application
-CMD ["java", "-jar", "app.jar"]
+COPY --from=build /build/libs/demo-1.jar app.jar
+
+ENTRYPOINT ["java", "-jar", "app.jar"]
